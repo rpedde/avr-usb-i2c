@@ -4,8 +4,8 @@
 #include <util/delay.h>     /* for _delay_ms() */
 
 #include <avr/pgmspace.h>   /* required by usbdrv.h */
+#include <avr/eeprom.h>
 #include "usbdrv.h"
-#include "oddebug.h"        /* This is also an example for using debug macros */
 #include "i2cmaster.h"
 
 typedef signed char int8;
@@ -38,9 +38,6 @@ typedef uint32_t uint32;
 
 int i2c_send(uint8_t device, uint8_t addr, uint8_t byte);
 int i2c_send_cmd(uint8_t device, uint8_t byte);
-
-void usb_recv(uint8_t data, uint8_t len) {
-}
 
 static uchar buffer[64];
 static uint8_t buffer_len;
@@ -264,7 +261,6 @@ int main(void) {
      * That's the way we need D+ and D-. Therefore we don't need any
      * additional hardware initialization.
      */
-    odDebugInit();
     usbInit();
     usbDeviceDisconnect();  /* enforce re-enumeration, do this while interrupts are disabled! */
     i = 0;
@@ -274,9 +270,7 @@ int main(void) {
     }
     usbDeviceConnect();
     sei();
-    DBG1(0x01, 0, 0);       /* debug output: main loop starts */
     for(;;) {                /* main event loop */
-        DBG1(0x02, 0, 0);   /* debug output: main loop iterates */
         wdt_reset();
         usbPoll();
     }
