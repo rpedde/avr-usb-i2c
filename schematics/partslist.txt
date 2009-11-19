@@ -1,16 +1,16 @@
 Component   Value       Package           Mouser Part #
 -------------------------------------------------------------
 
-R1          10K         1206              71-CRCW1206-10K0-EE
-R2          68          1206              71-CRCW1206-68R1-EE
-R3          68          1206              71-CRCW1206-68R1-EE
-R4          10K         1206              71-CRCW1206-10K0-EE
-R5          4.6K        1206              71-CRCW1206-4K64-EE
-R6          4.6K        1206              71-CRCW1206-4K64-EE
-R7          720         1206              71-CRCW1206-715R-EE
-R8          240         1206              71-CRCW1206-240R-EE
-R9          1K          1206              71-CRCW1206-1K00-EE
-R10         1K          1206              71-CRCW1206-1K00-EE
+R1          10K         1206              71-CRCW1206-10K-E3
+R2          68          1206              71-CRCW1206-68.1-E3
+R3          68          1206              71-CRCW1206-68.1-E3
+R4          10K         1206              71-CRCW1206-10K-E3
+R5          4.6K        1206              71-CRCW1206-4.64K-E3
+R6          4.6K        1206              71-CRCW1206-4.64K-E3
+R7          720         1206              71-CRCW1206-715-E3
+R8          240         1206              71-CRCW1206-240-E3
+R9          1K          1206              71-CRCW1206-1.0K-E3
+R10         1K          1206              71-CRCW1206-1.0K-E3
 
 D1	    3.6V        SOT-23            512-BZX84C3V6
 D2	    3.6V        SOT-23            512-BZX84C3V6
@@ -21,7 +21,7 @@ D6	    		SMA		  512-S1A
 
 C1          22pF	0805              81-ERB21BC2D220JDX1L
 C2          22pF	0805              81-ERB21BC2D220JDX1L
-C3	    10uF	1206		  81-GRM426R106K10L
+C3	    10uF	1206		  81-GRM31CR61C106KA88
 C4	    .1uF	0805		  81-GRM426C101J050D
 C5	    .1uF	0805		  81-GRM426C101J050D
 
@@ -33,7 +33,6 @@ LED2	    Red		1206		  607-CMDA2DR7D1S
 	    Blue	1206		  607-CMDA2AG7D1S
 
 LM317	    		SOT-223		  LM317DCY
-
 
 
 
