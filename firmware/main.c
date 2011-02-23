@@ -6,14 +6,13 @@
 #include <avr/pgmspace.h>   /* required by usbdrv.h */
 #include <avr/eeprom.h>
 #include "usbdrv.h"
-#include "i2cmaster.h"
+#include "i2c.h"
+#include "timerx8.h"
 
 typedef signed char int8;
 typedef uint8_t uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
-
-#define DEBUG_ADDR 16
 
 #define EP_SIZE 64
 
@@ -36,8 +35,8 @@ typedef uint32_t uint32;
 #define VENDOR_RQ_WRITE_BUFFER 0x00
 #define VENDOR_RQ_READ_BUFFER  0x01
 
-int i2c_send(uint8_t device, uint8_t addr, uint8_t byte);
-int i2c_send_cmd(uint8_t device, uint8_t byte);
+/* int i2c_send(uint8_t device, uint8_t addr, uint8_t byte); */
+/* int i2c_send_cmd(uint8_t device, uint8_t byte); */
 
 static uchar buffer[64];
 static uint8_t buffer_len;
@@ -93,42 +92,14 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             buffer[0] = counter;
             buffer_len = buffer[4] + 1;
 
-            if(i2c_start((buffer[2] << 1) + I2C_WRITE)) {
-                // probably noack.
-                i2c_stop();
+            if((i2cMasterSendNI(buffer[2] << 1, 1, &buffer[3]) == I2C_OK) &&
+               (i2cMasterReceiveNI(buffer[2] << 1, counter, &buffer[1]) == I2C_OK)) {
+                    buffer[0] = 1;
+            } else {
                 buffer[0] = 0;
                 buffer[1] = I2C_E_NODEV;
-                break;
             }
 
-            if(i2c_write(buffer[3])) {
-                i2c_stop();
-                buffer[0] = 0;
-                buffer[1] = I2C_E_NOACK;
-                break;
-            }
-
-            if(i2c_start((buffer[2] << 1) + I2C_READ)) {
-                i2c_stop();
-                buffer[0] = 0;
-                buffer[1] = I2C_E_NODEV;
-                break;
-            }
-
-            while(counter) {
-                i = 1 + buffer[0] - counter;
-
-                if(counter > 1) {
-                    buffer[i] = i2c_readAck();
-                } else {
-                    buffer[i] = i2c_readNak();
-                }
-
-                counter--;
-            }
-
-            i2c_stop();
-            buffer[0] = 1;
             break;
 
         case CMD_I2C_WRITE:
@@ -142,33 +113,12 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             counter = buffer[1] - 2;
             buffer[0] = counter;
 
-            if(i2c_start((buffer[2] << 1) + I2C_WRITE)) {
-                // probably noack.
-                i2c_stop();
+            if(i2cMasterSendNI(buffer[2] << 1, counter + 1, &buffer[3]) == I2C_OK) {
+                buffer[0] = 1;
+            } else {
                 buffer[0] = 0;
                 buffer[1] = I2C_E_NODEV;
-                break;
             }
-
-            if(i2c_write(buffer[3])) {
-                i2c_stop();
-                buffer[0] = 0;
-                buffer[1] = I2C_E_NOACK;
-                break;
-            }
-
-            while(counter) {
-                i = 4 + buffer[0] - counter;
-                if(i2c_write(buffer[i])) {
-                    buffer[0] = 0;
-                    buffer[1] = I2C_E_NOACK;
-                }
-                counter--;
-            }
-
-            i2c_stop();
-
-            buffer[0] = 1;
             break;
 
         case CMD_RESET:
@@ -204,52 +154,25 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
     return 0;   /* default for not implemented requests: return no data back to host */
 }
 
-int i2c_send_cmd(uint8_t device, uint8_t byte) {
-    i2c_start_wait(device + I2C_WRITE);
-    if(!i2c_write(0x41)) {
-        _delay_ms(10);
-        if(!i2c_write(byte)) {;
-            _delay_ms(10);
-        }
-    }
-
-    i2c_stop();
-    _delay_ms(10);
-
-    return 0;
-}
-
-int i2c_send(uint8_t device, uint8_t addr, uint8_t byte) {
-    i2c_start_wait(device + I2C_WRITE);
-    if(!i2c_write(addr)) {
-        _delay_ms(10);
-        if(!i2c_write(0x30 | (byte >> 4))) {
-            _delay_ms(10);
-            if(!i2c_write(0x30 | (byte & 0x0F))) {
-                _delay_ms(10);
-                i2c_write(' ');
-            }
-        }
-    }
-
-    _delay_ms(10);
-    i2c_stop();
-    _delay_ms(10);
-
-    return 0;
-}
 
 /* ------------------------------------------------------------------------- */
 
 int main(void) {
     uchar   i;
 
-    DDRD |= (1U << 1);
-    PORTD |= (1U << 1);
-    i2c_init();
-    _delay_ms(10);
-    i2c_send_cmd(DEBUG_ADDR, 1);
-    PORTD ^= (1U << 1);
+    DDRC &= (~0x30);
+
+    _delay_ms(20);
+
+    DDRC |= (1U << 3);
+    PORTC |= (1U << 3);
+
+    i2cInit();
+    i2cSetBitrate(10);
+
+    _delay_ms(20);
+
+    PORTC ^= (1U << 3);
 
     wdt_enable(WDTO_1S);
     /* Even if you don't use the watchdog, turn it off here. On newer devices,

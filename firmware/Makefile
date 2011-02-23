@@ -7,16 +7,16 @@
 # License: GNU GPL v2 (see License.txt), GNU GPL v3 or proprietary (CommercialLicense.txt)
 # This Revision: $Id: Makefile 692 2008-11-07 15:07:40Z cs $
 
-AVRLIB  = ~/working/avrlib
-VUSB    = ~/working/vusb-20090822
-DEVICE  = atmega168
+AVRLIB  = ~/working.garage/avrlib
+VUSB    = ~/working.garage/vusb-20100715
+DEVICE  = atmega88
 F_CPU   = 20000000	# in Hz
 FUSE_L  = 0xdf
 FUSE_H  = 0xde
-AVRDUDE = avrdude -c avrisp2 -P usb -p $(DEVICE) # edit this line for your programmer
+AVRDUDE = avrdude -F -c avrisp2 -P usb -p $(DEVICE) # edit this line for your programmer
 
 CFLAGS  = -Iusbdrv -I. -DDEBUG_LEVEL=0 -I$(shell cd ${AVRLIB}; pwd)
-OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o main.o twimaster.o
+OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o main.o ${AVRLIB}/i2c.o #twimaster.o
 
 COMPILE = avr-gcc -Wall -Os -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE)
 
