@@ -15,10 +15,10 @@ FUSE_L  = 0xdf
 FUSE_H  = 0xde
 AVRDUDE = avrdude -F -c avrisp2 -P usb -p $(DEVICE) # edit this line for your programmer
 
-CFLAGS  = -Iusbdrv -I. -DDEBUG_LEVEL=0 -I$(shell cd ${AVRLIB}; pwd)
+CFLAGS  = -I/usr/local/include -Iusbdrv -I. -DDEBUG_LEVEL=0 -I$(shell cd ${AVRLIB}; pwd)
 OBJECTS = usbdrv/usbdrv.o usbdrv/usbdrvasm.o usbdrv/oddebug.o main.o ${AVRLIB}/i2c.o #twimaster.o
 
-COMPILE = avr-gcc -Wall -Os -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE)
+COMPILE = avr-gcc -Wall -Os -DDEVICE="$(DEVICE)" -DF_CPU=$(F_CPU) $(CFLAGS) -mmcu=$(DEVICE)
 
 ##############################################################################
 # Fuse values for particular devices

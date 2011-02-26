@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include <avr/interrupt.h>  /* for sei() */
+#include <string.h>
 #include <util/delay.h>     /* for _delay_ms() */
 
 #include <avr/pgmspace.h>   /* required by usbdrv.h */
@@ -8,6 +9,8 @@
 #include "usbdrv.h"
 #include "i2c.h"
 #include "timerx8.h"
+
+#include <mpusb/mpusb.h>
 
 typedef signed char int8;
 typedef uint8_t uint8;
@@ -34,9 +37,6 @@ typedef uint32_t uint32;
 
 #define VENDOR_RQ_WRITE_BUFFER 0x00
 #define VENDOR_RQ_READ_BUFFER  0x01
-
-/* int i2c_send(uint8_t device, uint8_t addr, uint8_t byte); */
-/* int i2c_send_cmd(uint8_t device, uint8_t byte); */
 
 static uchar buffer[64];
 static uint8_t buffer_len;
@@ -70,9 +70,18 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             buffer_len = 2;
             break;
         case CMD_BOARD_TYPE:
-            buffer[0] = 2;  // i2c
+            buffer[0] = BOARD_TYPE_I2C;
             buffer[1] = 9;  // serial_no (should be from eeprom)
-            buffer[2] = 2;  // avr ATmega168
+
+#ifdef __AVR_ATmega88__
+            buffer[2] = PROCESSOR_TYPE_A88;
+#elif defined __AVR_ATmega168__
+            buffer[2] = PROCESSOR_TYPE_A168;
+#else
+#warn "UNKNOWN PROC TYPE!"
+            buffer[2] = PROCESSOR_TYPE_UNKNOWN;
+#endif
+
             buffer[3] = F_CPU/1000000;
             buffer_len = 4;
             break;
