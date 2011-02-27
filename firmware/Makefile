@@ -7,8 +7,8 @@
 # License: GNU GPL v2 (see License.txt), GNU GPL v3 or proprietary (CommercialLicense.txt)
 # This Revision: $Id: Makefile 692 2008-11-07 15:07:40Z cs $
 
-AVRLIB  = ~/working.garage/avrlib
-VUSB    = ~/working.garage/vusb-20100715
+AVRLIB  = ../../avrlib
+VUSB    = ../../vusb
 DEVICE  = atmega88
 F_CPU   = 20000000	# in Hz
 FUSE_L  = 0xdf
