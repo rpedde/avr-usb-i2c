@@ -12,7 +12,7 @@ VUSB    = ~/working.garage/vusb-20100715
 DEVICE  = atmega88
 F_CPU   = 20000000	# in Hz
 FUSE_L  = 0xdf
-FUSE_H  = 0xde
+FUSE_H  = 0xd6   # 0xd6 to save eeprom, 0xde to not save eeprom
 AVRDUDE = avrdude -F -c avrisp2 -P usb -p $(DEVICE) # edit this line for your programmer
 
 CFLAGS  = -I/usr/local/include -Iusbdrv -I. -DDEBUG_LEVEL=0 -I$(shell cd ${AVRLIB}; pwd)
