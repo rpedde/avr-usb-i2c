@@ -2,17 +2,9 @@ AVR-USB-I2C
 
 This is hardware and firmware for a USB interfaced I2C controller.
 
-Firmware and hardware are here.  BatchPCB board is here:
+I've gotten some of these back from BatchPCB and they appear to work.
+They should really be modified to control the 1.5K pullup in firmware
+though.
 
-http://www.batchpcb.com/product_info.php?products_id=24985&check=a5ec091ff6a583550b4c193d7b1e7253
-
-Be aware I haven't received an actual board yet back from BatchPCB,
-so it may not actually work, although it's been prototyped and tested 
-on a one-sided board.
-
-Linux/Mac library to talk to the board is written and will be uploaded
-to github.  Currently it's in subversion at:
-
-https://svn.fireflymediaserver.org/svn/pic/mpusb
 
  -- Ron
