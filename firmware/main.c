@@ -22,21 +22,6 @@ typedef uint32_t uint32;
 
 #define EP_SIZE 64
 
-#define CMD_READ_VERSION   0x00
-#define CMD_READ_EEDATA    0x01
-#define CMD_WRITE_EEDATA   0x02
-#define CMD_BOARD_TYPE     0x30
-#define CMD_BD_POWER_INFO  0x31
-#define CMD_BD_POWER_STATE 0x32
-#define CMD_I2C_READ       0x40
-#define CMD_I2C_WRITE      0x41
-#define CMD_RESET          0xFF
-
-#define I2C_E_SUCCESS      0x00
-#define I2C_E_NODEV        0x01
-#define I2C_E_NOACK        0x02
-#define I2C_E_TIMEOUT      0x03
-#define I2C_E_OTHER        0x04
 
 #define VENDOR_RQ_WRITE_BUFFER 0x00
 #define VENDOR_RQ_READ_BUFFER  0x01
@@ -61,7 +46,6 @@ uchar usbFunctionWrite(uchar *data, uchar len)
         switch(buffer[0]) {
         case CMD_READ_EEDATA:
             buffer[1] = buffer[2];
-
             buffer[0] = eeprom_read_byte((uint8_t*)(uint16_t)buffer[1]);
             buffer_len = 2;
             break;
