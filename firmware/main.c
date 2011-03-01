@@ -3,7 +3,6 @@
 #include <avr/interrupt.h>  /* for sei() */
 #include <string.h>
 #include <util/delay.h>     /* for _delay_ms() */
-
 #include <avr/pgmspace.h>   /* required by usbdrv.h */
 #include <avr/eeprom.h>
 #include "usbdrv.h"
@@ -11,6 +10,10 @@
 #include "timerx8.h"
 
 #include <mpusb/mpusb.h>
+
+
+#define FIRMWARE_MAJOR 2
+#define FIRMWARE_MINOR 0
 
 typedef signed char int8;
 typedef uint8_t uint8;
@@ -46,6 +49,7 @@ uchar usbFunctionWrite(uchar *data, uchar len)
 {
     uchar i;
     uchar counter;
+    uint8_t temp;
 
     if(len > bytesRemaining)                // if this is the last incomplete chunk
         len = bytesRemaining;               // limit to the amount we can store
@@ -57,21 +61,27 @@ uchar usbFunctionWrite(uchar *data, uchar len)
         switch(buffer[0]) {
         case CMD_READ_EEDATA:
             buffer[1] = buffer[2];
-            buffer[0] = 0xea; // should be read value of offset buffer[1]
+
+            buffer[0] = eeprom_read_byte((uint8_t*)(uint16_t)buffer[1]);
             buffer_len = 2;
             break;
         case CMD_WRITE_EEDATA:
             buffer[0] = 1; // true or false  [2] is offset, [3] is value
+            eeprom_write_byte((uint8_t*)(uint16_t)buffer[2], buffer[3]);
             buffer_len = 4;
             break;
         case CMD_READ_VERSION:
-            buffer[0] = 2;
-            buffer[1] = 0;
+            buffer[0] = FIRMWARE_MAJOR;
+            buffer[1] = FIRMWARE_MINOR;
             buffer_len = 2;
             break;
         case CMD_BOARD_TYPE:
             buffer[0] = BOARD_TYPE_I2C;
-            buffer[1] = 9;  // serial_no (should be from eeprom)
+            temp = eeprom_read_byte((uint8_t*)1);
+            if((temp == 0) || (temp == 255))
+                temp = 9;
+
+            buffer[1] = temp;  // read from EEPROM address 1
 
 #ifdef __AVR_ATmega88__
             buffer[2] = PROCESSOR_TYPE_A88;
