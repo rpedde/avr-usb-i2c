@@ -99,8 +99,8 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             RESPONSE(i2c_read)->result = counter;
             buffer_len = REQUEST(i2c_read)->read_len + 1;
 
-            if((i2cMasterSendNI(REQUEST(i2c_read)->device << 1, 1, &REQUEST(i2c_read)->address) == I2C_OK) &&
-               (i2cMasterReceiveNI(REQUEST(i2c_read)->device << 1, counter, RESPONSE(i2c_read)->data) == I2C_OK)) {
+            if((i2cMasterSendNI(REQUEST(i2c_read)->device << 1, 1, &(REQUEST(i2c_read)->address)) == I2C_OK) &&
+               (i2cMasterReceiveNI(REQUEST(i2c_read)->device << 1, counter, &(RESPONSE(i2c_read)->data)) == I2C_OK)) {
                 RESPONSE(i2c_read)->result = 1;
             } else {
                 RESPONSE(i2c_read)->result = 0;
@@ -121,7 +121,7 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             counter = REQUEST(i2c_write)->len - 2;
             RESPONSE(i2c_write)->result = counter;
 
-            if(i2cMasterSendNI(REQUEST(i2c_write)->device << 1, counter + 1, &REQUEST(i2c_write)->address) == I2C_OK) {
+            if(i2cMasterSendNI(REQUEST(i2c_write)->device << 1, counter + 1, &(REQUEST(i2c_write)->address)) == I2C_OK) {
                 RESPONSE(i2c_write)->result = 1;
             } else {
                 RESPONSE(i2c_write)->result = 0;
