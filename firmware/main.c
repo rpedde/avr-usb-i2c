@@ -33,6 +33,13 @@ static uchar currentPosition, bytesRemaining;
 #define REQUEST(what) ((usb_cmd_##what##_t *)&buffer)
 #define RESPONSE(what) ((usb_response_##what##_t *)&buffer)
 
+
+void i2c_write(uint8_t len, uint8_t *data) {
+    /* we got i2c data */
+    PORTC ^= (1U << 3);
+    usbSetInterrupt(data, len);
+}
+
 uchar usbFunctionWrite(uchar *data, uchar len)
 {
     uchar i;
@@ -95,7 +102,7 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             buffer_len = REQUEST(i2c_read)->read_len + 1;
 
             if((i2cMasterSendNI(REQUEST(i2c_read)->device << 1, 1, &(REQUEST(i2c_read)->address)) == I2C_OK) &&
-               (i2cMasterReceiveNI(REQUEST(i2c_read)->device << 1, counter, &(RESPONSE(i2c_read)->data)) == I2C_OK)) {
+               (i2cMasterReceiveNI(REQUEST(i2c_read)->device << 1, counter, (u08*)&(RESPONSE(i2c_read)->data)) == I2C_OK)) {
                 RESPONSE(i2c_read)->result = 1;
             } else {
                 RESPONSE(i2c_read)->result = 0;
@@ -166,6 +173,10 @@ int main(void) {
 
     i2cInit();
     i2cSetBitrate(10);
+
+    i2cSetLocalDeviceAddr(0x80, TRUE);
+
+    i2cSetSlaveReceiveHandler(i2c_write);
 
     _delay_ms(20);
 
