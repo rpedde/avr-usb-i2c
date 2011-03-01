@@ -30,6 +30,9 @@ static uchar buffer[64];
 static uint8_t buffer_len;
 static uchar currentPosition, bytesRemaining;
 
+#define REQUEST(what) ((usb_cmd_##what##_t *)&buffer)
+#define RESPONSE(what) ((usb_response_##what##_t *)&buffer)
+
 uchar usbFunctionWrite(uchar *data, uchar len)
 {
     uchar i;
@@ -45,39 +48,40 @@ uchar usbFunctionWrite(uchar *data, uchar len)
     if(bytesRemaining == 0) {
         switch(buffer[0]) {
         case CMD_READ_EEDATA:
-            buffer[1] = buffer[2];
-            buffer[0] = eeprom_read_byte((uint8_t*)(uint16_t)buffer[1]);
-            buffer_len = 2;
+            RESPONSE(read_eedata)->addr = REQUEST(read_eedata)->addr;
+            RESPONSE(read_eedata)->value = eeprom_read_byte((uint8_t*)(uint16_t)REQUEST(read_eedata)->addr);
+
+            buffer_len = sizeof(usb_response_read_eedata_t);
             break;
         case CMD_WRITE_EEDATA:
-            buffer[0] = 1; // true or false  [2] is offset, [3] is value
-            eeprom_write_byte((uint8_t*)(uint16_t)buffer[2], buffer[3]);
-            buffer_len = 4;
+            RESPONSE(write_eedata)->result = 1;
+            eeprom_write_byte((uint8_t*)(uint16_t)REQUEST(write_eedata)->addr, REQUEST(write_eedata)->value);
+            buffer_len = sizeof(usb_response_write_eedata_t);
             break;
         case CMD_READ_VERSION:
-            buffer[0] = FIRMWARE_MAJOR;
-            buffer[1] = FIRMWARE_MINOR;
-            buffer_len = 2;
+            RESPONSE(read_version)->version_major = FIRMWARE_MAJOR;
+            RESPONSE(read_version)->version_minor = FIRMWARE_MINOR;
+            buffer_len = sizeof(usb_response_read_version_t);;
             break;
         case CMD_BOARD_TYPE:
-            buffer[0] = BOARD_TYPE_I2C;
+            RESPONSE(board_type)->board_type = BOARD_TYPE_I2C;
             temp = eeprom_read_byte((uint8_t*)1);
             if((temp == 0) || (temp == 255))
                 temp = 9;
 
-            buffer[1] = temp;  // read from EEPROM address 1
+            RESPONSE(board_type)->serial = temp;  // read from EEPROM address 1
 
 #ifdef __AVR_ATmega88__
-            buffer[2] = PROCESSOR_TYPE_A88;
+            RESPONSE(board_type)->proc_type = PROCESSOR_TYPE_A88;
 #elif defined __AVR_ATmega168__
-            buffer[2] = PROCESSOR_TYPE_A168;
+            RESPONSE(board_type)->proc_type = PROCESSOR_TYPE_A168;
 #else
 #warn "UNKNOWN PROC TYPE!"
-            buffer[2] = PROCESSOR_TYPE_UNKNOWN;
+            RESPONSE(board_type)->proc_type = PROCESSOR_TYPE_UNKNOWN;
 #endif
 
-            buffer[3] = F_CPU/1000000;
-            buffer_len = 4;
+            RESPONSE(board_type)->mhz = F_CPU/1000000;
+            buffer_len = sizeof(usb_response_board_type_t);
             break;
         case CMD_BD_POWER_STATE:
             buffer_len = 0;
@@ -91,16 +95,16 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             // 2 - DEV
             // 3 - ADDR
             // 4 - BYTES_TO_READ
-            counter = buffer[4];
-            buffer[0] = counter;
-            buffer_len = buffer[4] + 1;
+            counter = REQUEST(i2c_read)->read_len;
+            RESPONSE(i2c_read)->result = counter;
+            buffer_len = REQUEST(i2c_read)->read_len + 1;
 
-            if((i2cMasterSendNI(buffer[2] << 1, 1, &buffer[3]) == I2C_OK) &&
-               (i2cMasterReceiveNI(buffer[2] << 1, counter, &buffer[1]) == I2C_OK)) {
-                    buffer[0] = 1;
+            if((i2cMasterSendNI(REQUEST(i2c_read)->device << 1, 1, &REQUEST(i2c_read)->address) == I2C_OK) &&
+               (i2cMasterReceiveNI(REQUEST(i2c_read)->device << 1, counter, RESPONSE(i2c_read)->data) == I2C_OK)) {
+                RESPONSE(i2c_read)->result = 1;
             } else {
-                buffer[0] = 0;
-                buffer[1] = I2C_E_NODEV;
+                RESPONSE(i2c_read)->result = 0;
+                *RESPONSE(i2c_read)->data = I2C_E_NODEV;
             }
 
             break;
@@ -112,15 +116,16 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             // 3 - ADDR
             // 4 - BYTES_TO_READ
 
-            buffer_len = 2;
-            counter = buffer[1] - 2;
-            buffer[0] = counter;
+            buffer_len = sizeof(usb_response_i2c_write_t);
 
-            if(i2cMasterSendNI(buffer[2] << 1, counter + 1, &buffer[3]) == I2C_OK) {
-                buffer[0] = 1;
+            counter = REQUEST(i2c_write)->len - 2;
+            RESPONSE(i2c_write)->result = counter;
+
+            if(i2cMasterSendNI(REQUEST(i2c_write)->device << 1, counter + 1, &REQUEST(i2c_write)->address) == I2C_OK) {
+                RESPONSE(i2c_write)->result = 1;
             } else {
-                buffer[0] = 0;
-                buffer[1] = I2C_E_NODEV;
+                RESPONSE(i2c_write)->result = 0;
+                RESPONSE(i2c_write)->extended_result = I2C_E_NODEV;
             }
             break;
 
