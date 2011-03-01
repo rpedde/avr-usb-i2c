@@ -90,11 +90,6 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             buffer_len = 0;
             break;
         case CMD_I2C_READ:
-            // 0 - I2C_READ
-            // 1 - DATA_LEN
-            // 2 - DEV
-            // 3 - ADDR
-            // 4 - BYTES_TO_READ
             counter = REQUEST(i2c_read)->read_len;
             RESPONSE(i2c_read)->result = counter;
             buffer_len = REQUEST(i2c_read)->read_len + 1;
@@ -110,12 +105,6 @@ uchar usbFunctionWrite(uchar *data, uchar len)
             break;
 
         case CMD_I2C_WRITE:
-            // 0 - I2C_WRITE
-            // 1 - DATA_LEN
-            // 2 - DEV
-            // 3 - ADDR
-            // 4 - BYTES_TO_READ
-
             buffer_len = sizeof(usb_response_i2c_write_t);
 
             counter = REQUEST(i2c_write)->len - 2;
